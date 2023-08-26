@@ -5,22 +5,30 @@ const botoesContexto = document.querySelectorAll('button[data-contexto]');
 const tituloContexto = document.querySelector('.app__title');
 const musicaFoco = document.querySelector('[data-musica]');
 const botaoComecarPausar = document.querySelector('[data-botao-comecar]');
+const relogio = document.querySelector('#timer');
 const musica = new Audio('sons/luna-rise-part-one.mp3');
 musica.loop = true;
 
-let tempoRelogioSegundos = 5;
+const intervalosDeTempo = {'foco': 1500, 'descanso-curto': 300, 'descanso-longo': 900}
+let intervaloId = null;
+let tempoRelogioSegundos = 1500;
+const iconeBotaoTemporizador = botaoComecarPausar.childNodes[1];
+const textoBotaoTemporizador = botaoComecarPausar.childNodes[3];
 
 botoesContexto.forEach(botao => botao.addEventListener('click', () => {
+    pararTemporizador();
     botoesContexto.forEach((botaoContexto) => botaoContexto.classList.remove('active'));
-    alterarFoco(botao);
+    alterarContexto(botao);
 }));
 
-function alterarFoco(botao) {
+function alterarContexto(botao) {
     botao.classList.add('active');
     const contexto = botao.getAttribute('data-contexto');
+    tempoRelogioSegundos = intervalosDeTempo[contexto];
     html.setAttribute('data-contexto', contexto);
     imagemContexto.setAttribute('src', `/imagens/${contexto}.png`);
     tituloContexto.innerHTML = selecionarTitulo(contexto);
+    apresentarTempo();
 }
 
 musicaFoco.addEventListener('change', () => {
@@ -30,7 +38,7 @@ musicaFoco.addEventListener('change', () => {
         musica.pause();
 });
 
-let intervaloId = null;
+
 const contagemRegressiva = () => {
     if (tempoRelogioSegundos <= 0) {
         new Audio('sons/beep.mp3').play();
@@ -38,7 +46,7 @@ const contagemRegressiva = () => {
         return;
     }
     tempoRelogioSegundos--;
-    console.log(tempoRelogioSegundos);
+    apresentarTempo();
 }
 
 botaoComecarPausar.addEventListener('click', iniciarTemporizador);
@@ -50,13 +58,25 @@ function iniciarTemporizador() {
         return;
     }
     new Audio('sons/play.wav').play();
+    iconeBotaoTemporizador.src = 'imagens/pause.png';
+    textoBotaoTemporizador.textContent = 'Pausar';
     intervaloId = setInterval(contagemRegressiva, 1000);
 }
 
 function pararTemporizador() {
+    iconeBotaoTemporizador.src = 'imagens/play_arrow.png';
+    textoBotaoTemporizador.textContent = 'Começar';
     clearInterval(intervaloId);
     intervaloId = null;
 }
+
+function apresentarTempo() {
+    const tempo = new Date(tempoRelogioSegundos * 1000);
+    const tempoFormatado = tempo.toLocaleString('pt-BR', {minute: '2-digit', second: '2-digit'});
+    relogio.innerHTML = `${tempoFormatado}`;
+}
+
+apresentarTempo();
 
 function selecionarTitulo(contexto) {
     switch (contexto) {
